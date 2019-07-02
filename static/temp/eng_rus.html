@@ -1,0 +1,168 @@
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="css/reset.css">
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+    <link rel="stylesheet" href="css/trainings.css" type="text/css">
+    <title>trainings</title>
+
+
+    <script type="text/javascript">
+        var ws;
+        var words = [];
+        var randomWords = [];
+        var rightTranslation;
+        var word;
+        var rightIndex;
+        var completedWords = [];
+        var isFirstClick = true;
+        var wordsEnded = false;
+        function init() {
+            completedWords.push("er");
+            ws = new WebSocket("ws://localhost:8080/training");
+
+            ws.onopen = function (event) {
+                send();
+            };
+            ws.onmessage = function (event) {
+                messageHandler(event.data);
+            };
+            ws.onclose = function (event) {};
+            setListeners();
+        }
+
+        function setEverything(){
+            if (words.length === 0){
+                onEndTraining();
+            }
+            var currentPair = words.pop();
+            rightTranslation = currentPair.split("=")[1];
+            word = currentPair.split("=")[0];
+
+
+            document.getElementById("word").textContent = word;
+            document.getElementById("enter").textContent = "i don't know";
+
+            var translates = document.getElementsByName("translation");
+            rightIndex = getRandomNumber(1,5);
+
+            for (var i = 0; i < translates.length; i++){
+                if (i === rightIndex)
+                    continue;
+                translates[i].textContent = randomWords.pop();
+            }
+
+            translates[rightIndex].textContent = rightTranslation;
+        }
+
+        function onClickHandler(event){
+            if (isFirstClick){
+                isFirstClick = false;
+                if (event.target.textContent === rightTranslation)
+                    completedWords.push(word);
+                else if (event.target.textContent !== "i don't know")
+                    event.target.style.backgroundColor = "#E31C1C";
+
+                document.getElementsByName("translation")[rightIndex].style.backgroundColor = "#56E31C";
+                enter.textContent = "enter";
+            } else {
+                isFirstClick = true;
+                resetStyle();
+                setEverything();
+            }
+        }
+
+        function messageHandler(data) {
+            if (data === "endWords") {
+                onEndWords();
+                wordsEnded = true;
+            }
+            else {
+                var w = data.split("<separator>");
+
+                if (w.length <= 20) {
+                    words = w;
+                    randomWords.pop();
+                    words.pop();
+                    setEverything();
+                }
+                else
+                    randomWords = w;
+            }
+        }
+
+        function onEndTraining() {
+            ws.send(JSON.stringify(completedWords));
+            if (confirm("would u like to continue?"))
+                window.location.reload();
+            else
+                document.location.href = "trainings.html";
+        }
+
+        function onEndWords() {
+            alert("oops u leaned all words");
+            document.location.href = "trainings.html";
+        }
+
+        function setListeners() {
+            var translates = document.getElementsByName("translation");
+
+            for (var i = 0; i < translates.length; i++)
+                translates[i].addEventListener("click",onClickHandler);
+            enter.addEventListener("click",onClickHandler);
+        }
+
+        function resetStyle() {
+            var translates = document.getElementsByName("translation");
+
+            for (var i = 0; i < translates.length; i++){
+                translates[i].style = "";
+            }
+        }
+
+        function getRandomNumber(min, max) {
+            return Math.floor(Math.random() * (max - min) + min);
+        }
+
+        function send() {
+            ws.send("eng_rus");
+            ws.send("getRandomRusWords");
+            ws.send("getWords");
+        }
+    </script>
+
+</head>
+<body onload="init();">
+<header>
+    <div class="dws-menu">
+        <ul class="dws-ul">
+            <li class="dws-li"><a href="home.html">Home</a></li>
+            <li class="dws-li"><a href="trainings.html">Trainings</a></li>
+            <li class="dws-li"><a href="dictionary.html">Dictionary</a></li>
+            <li class="dws-li"><a href="signIn.html">Exit</a></li>
+        </ul>
+    </div>
+</header>
+
+
+
+<div class = "section" id="parentBlock">
+    <strong id = "word"></strong>
+    <div class="translations">
+        <ul class="rounded">
+            <li><a name = "translation" href="#"></a></li>
+            <li><a name = "translation" href="#"></a></li>
+            <li><a name = "translation" href="#"></a></li>
+            <li><a name = "translation" href="#"></a></li>
+            <li><a name = "translation" href="#"></a></li>
+            <li><a href="#" id="enter"          ></a></li>
+        </ul>
+    </div>
+</div>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="css/reset.css">
+	<link rel="stylesheet" href="css/style.css" type="text/css">
+	<link rel="stylesheet" href="css/dictionary.css" type="text/css">
+	<title>dictionary</title>
+
+	<script type="text/javascript">
+		var index = 1;
+		var ws;
+		var pairs = [];
+		var checkedWords = [];
+		var checkedTrs = [];
+
+		function init() {
+		    ws = new WebSocket("ws://localhost:8080/dictionary");
+
+		    ws.onopen = function (event) {
+				ws.send("getWords");
+				setListeners();
+		    };
+		    ws.onmessage = function (event) {
+				pairs = event.data.split("_:_");
+				setEverything();
+		    };
+		    ws.onclose = function (event) {
+		    }
+		}
+
+		function setEverything() {
+			var maxIndex = pairs.length <= 30? pairs.length: 30;
+			var pair;
+			for (var i = 0; i < maxIndex; i++){
+				pair = pairs.pop();
+				var tr = document.createElement("tr");
+
+				var td0 = document.createElement("td");
+				var check = document.createElement("input");
+				check.setAttribute("type","checkbox");
+				check.setAttribute("class","check");
+				td0.appendChild(check);
+
+				var td1 = document.createElement("td");
+				td1.innerHTML ="" + index++;
+
+				var td2 = document.createElement("td");
+				td2.innerHTML = pair.split("=")[0];
+
+				var td3 = document.createElement("td");
+				td3.innerHTML = pair.split("=")[1];
+
+				var deleteSign = document.createElement("img");
+				deleteSign.setAttribute("height","30px");
+				deleteSign.setAttribute("src","delete-sign.png");
+				deleteSign.addEventListener("click",removeHandler);
+
+				var td4 = document.createElement("td");
+				td4.appendChild(deleteSign);
+
+				tr.appendChild(td0);
+				tr.appendChild(td1);
+				tr.appendChild(td2);
+				tr.appendChild(td3);
+				tr.appendChild(td4);
+
+				table.appendChild(tr);
+			}
+
+			if (pairs.length === 0)
+				document.getElementById("show").remove();
+		}
+
+		function addHandler(event) {
+			var newWord = document.getElementById("word").value;
+			var newTranslation = document.getElementById("translation").value;
+			
+			if (newWord.length === 0 || newTranslation.length === 0)
+				alert("Ops mistake occured");
+
+			ws.send(newWord + "<add>" + newTranslation);
+
+			var tr = document.createElement("tr");
+
+			var td0 = document.createElement("td");
+			var check = document.createElement("input");
+			check.setAttribute("type","checkbox");
+			check.setAttribute("class","check");
+			td0.appendChild(check);
+
+			var td1 = document.createElement("td");
+			td1.innerHTML ="" + index++;
+
+			var td2 = document.createElement("td");
+			td2.innerHTML = newWord;
+
+			var td3 = document.createElement("td");
+			td3.innerHTML = newTranslation;
+
+			var deleteSign = document.createElement("img");
+			deleteSign.setAttribute("height","30px");
+			deleteSign.setAttribute("src","delete-sign.png");
+			deleteSign.addEventListener("click",removeHandler);
+
+			var td4 = document.createElement("td");
+			td4.appendChild(deleteSign);
+
+			tr.appendChild(td0);
+			tr.appendChild(td1);
+			tr.appendChild(td2);
+			tr.appendChild(td3);
+			tr.appendChild(td4);
+
+			table.insertBefore(tr,table.firstElementChild);
+
+			renumeration();
+
+			document.getElementById("word").value = "";
+			document.getElementById("translation").value = "";
+		}
+
+		function removeHandler(event){
+			if (confirm("are u sure u wanna remove this word?")) {
+				var elem = event.target.parentElement.parentElement;
+
+				var word = elem.firstElementChild.nextSibling.textContent;
+				var translation = elem.firstElementChild.nextSibling.nextSibling.textContent;
+
+				ws.send(word + "<remove>" + translation);
+
+				elem.remove();
+				renumeration();
+			}
+		}
+		
+		function renumeration() {
+			index = 1;
+			var elems = table.children;
+
+			for (var i = 0; i < elems.length; i++){
+				elems[i].firstElementChild.nextElementSibling.innerHTML = "" + index++;
+			}
+		}
+
+		function showHandler(){
+			setEverything();
+		}
+
+		function sendHandler() {
+			getChecked();
+			checkedWords.push("send");
+			ws.send(JSON.stringify(checkedWords));
+
+			for (var i = 0; i < checkedTrs.length; i++)
+				checkedTrs[i].firstElementChild.firstElementChild.checked = false;
+
+			checkedTrs = [];
+			checkedWords = [];
+		}
+
+		function deleteAllHandler() {
+			if (confirm("Are u sure u wanna delete all these words?")){
+				getChecked();
+
+				for (var i = 0; i < checkedTrs.length; i++)
+					checkedTrs[i].remove();
+
+				renumeration();
+				checkedWords.push("deleteAll");
+				ws.send(JSON.stringify(checkedWords));
+				checkedTrs = [];
+				checkedWords = [];
+			}
+		}
+
+		function getChecked() {
+			var trs = document.getElementsByTagName("tr");
+
+			for (var i = 0; i < trs.length; i++)
+				if (trs[i].firstElementChild.firstElementChild.checked) {
+					checkedWords.push(trs[i].cells[2].textContent);
+					checkedTrs.push(trs[i]);
+				}
+		}
+		
+		function setListeners() {
+			btn.addEventListener("click",addHandler);
+			show.addEventListener("click",showHandler);
+			deleteAll.addEventListener("click",deleteAllHandler);
+			sendToTrainings.addEventListener("click", sendHandler);
+		}
+
+
+
+
+	</script>
+</head>
+<body onload="init();">
+	<header>
+		<div class="dws-menu">
+			<ul class="dws-ul">
+				<li class="dws-li"><a href="home.html">Home</a></li>
+				<li class="dws-li"><a href="trainings.html">Trainings</a></li>
+				<li class="dws-li"><a href="dictionary.html">Dictionary</a></li>
+				<li class="dws-li"><a href="signIn.html">Exit</a></li>
+			</ul>
+		</div>
+	</header>
+
+	<form class="in">
+		<input id="word" type="text" placeholder="word" required/>
+		<input id="translation" type="text" placeholder="translation" required/>
+		<input class="btn" type="button" value="add" id="btn">
+	</form>
+
+	<img src="Delete.png" width="75px" height="70x"  id="deleteAll">
+	<img src="Ticks.png"  width="60px" height="75px" id="sendToTrainings">
+
+	<div class = "list">
+		<table id="table">
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+<!--			<tr> <td><input type = "checkbox" class="check"></td> <td>1</td> <td>some very long word</td> <td> some very long translation</td> <td><img height="30px" src="delete-sign.png"></td></tr>-->
+
+		</table>
+	</div>
+
+	<div id="show">
+		<p>
+			Show more...
+		</p>
+	</div>
+
+</body>
+</html>

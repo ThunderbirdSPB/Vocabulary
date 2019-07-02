@@ -1,0 +1,182 @@
+body{
+ 	background-color: white;
+ 	font-family: Verdana;
+}
+
+/*
+-----------------------------------------------------------------------------
+										Header
+-----------------------------------------------------------------------------
+*/
+.dws-menu{
+ 	background-color: white;
+ 	width: 100%;
+ 	height: 8%;
+}
+
+/*
+	В блоки Ul выстраиваем списки горизонтально с помощью desplay:flax, 
+	убираем отступы, и центруем наши элементы при помощи justify-content:center.
+*/
+ul.dws-ul{
+ 	display: flex;		
+ 	padding: 0;
+ 	justify-content: center;
+}
+
+
+/*
+	У списков LI убираем маркер и делаем отступ со всех сторон в 10 пик.
+*/
+li.dws-li {
+ 	list-style: none;
+ 	padding: 10px;
+}
+
+/*
+	У ссылок убираем подчеркивание, увеличим текст до 18 пик. и сделаем его черным цветом.
+*/
+li.dws-li a{
+ 	text-decoration: none;
+ 	font-size: 25px;
+ 	color: #000;
+ 	position: relative;
+ 	padding:  5px;
+ 	margin-right: 7px;
+ 	margin-left: 7px;
+}
+
+
+/*
+	Иконку немного сдвинем правее при помощи margin-right:10px.
+
+	li.dws-li a i{
+	 	margin-right: 100px;
+	}
+*/
+
+/*
+	Анимирование
+*/
+
+li.dws-li a::before{
+
+	position: absolute;
+ 	top: 100%;
+ 	left: 0;
+
+ 	content: '';
+ 	width: 0px;
+ 	height: 3px;
+ 	background-color: #67E667;
+ 	position: absolute;
+ 	top: 100%;
+ 	left: 0;
+
+  	transition: .3s;
+ 	mix-blend-mode: multiply;
+
+ 	top: 90%;
+}
+
+li.dws-li a::after{
+ 	content: '';
+ 	width: 0px;
+ 	height: 3px;
+ 	background-color: #67E667;  
+ 	position: absolute;
+ 	top: 100%;
+ 	right: 0;
+
+ 	transition: .3s;
+ 	mix-blend-mode: multiply;
+
+ 	top: 90%;
+}
+
+
+/*
+	Анимация полосок
+	Слева на право
+*/
+li.dws-li:hover a:before{
+ 	width: 50%;
+ 	transform: translateX(100%);
+}
+
+/*
+	Анимация полосок
+	Справа налево
+*/
+li.dws-li:hover a:after{
+ width: 50%;
+ transform: translateX(-100%);
+}
+
+/*
+	Фон кнопки при наведении
+*/
+li.dws-li:hover{
+ 	background-color: #e5eae8;
+ 	border-radius: 80%;
+}
+
+/*
+	Ссылки при наведении
+
+	li.dws-li a:hover{
+	 color: #e62117;
+	}
+
+*/
+
+/*
+-----------------------------------------------------------------
+								center
+-----------------------------------------------------------------
+*/
+
+.trainings section{
+	height: 40%;
+	width: 33%;
+	background-color: grey; 
+	display: inline-block;	
+
+	position: relative;
+	left: 20%;
+
+	margin: 0px;
+	padding: 0px;
+	border: 0px;
+}
+
+.trainings a{
+	text-decoration: none;
+ 	font-size: 25px;
+ 	color: #000;
+}
+
+.trainings section:hover{
+	background-color: white;
+	transition: 0.3s;
+}
+
+.p{
+	position: absolute;
+	top: 45%;
+	left: 35%;
+}
+
+.trainings{
+	position: relative;
+}
+
+
+
+
+
+/*
+-----------------------------------------------------------------
+								center
+-----------------------------------------------------------------
+*/

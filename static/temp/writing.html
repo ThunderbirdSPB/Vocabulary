@@ -1,0 +1,116 @@
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="css/reset.css">
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+    <link rel="stylesheet" href="css/writing.css" type="text/css">
+    <title>trainings</title>
+
+
+    <script type="text/javascript">
+        var ws;
+        var pairs = [];
+        var word;
+        var translation;
+        var completedWords = [];
+        var isFirstClick = true;
+        function init(){
+            ws = new WebSocket("ws://localhost:8080/training");
+            completedWords.push("writing");
+
+            ws.onopen = function (event) {
+                ws.send("writing");
+                ws.send("getWords");
+            };
+
+            ws.onmessage = function (event) {
+                if (event.data === "endWords") {
+                    onEndWords();
+                }
+                else{
+                    pairs = event.data.split("<separator>");
+                    pairs.pop();
+                    setEverything();
+                }
+            };
+
+            ws.onclose = function (event) {};
+            document.getElementById("enter").addEventListener("click",inputEventHandler);
+
+        }
+
+        function setEverything() {
+            if (pairs.length === 0)
+                onEndTraining();
+            var pair = pairs.pop();
+            word = pair.split("=")[0];
+            translation = pair.split("=")[1];
+
+            document.getElementById("word").textContent = translation;
+        }
+
+        function inputEventHandler(event) {
+            event.preventDefault();
+            if (isFirstClick){
+                if(document.getElementById("in").value.trim().length === 0)
+                    return;
+
+                isFirstClick = false;
+                if (document.getElementById("in").value.toLowerCase().trim() === word.toLowerCase()){
+                    completedWords.push(word);
+                    document.getElementById("in").style.color = "#56E31C";
+                }else
+                    document.getElementById("in").style.color = "#E31C1C";
+
+            } else {
+                isFirstClick = true;
+                resetStyle();
+                setEverything();
+            }
+        }
+
+        function onEndTraining() {
+            ws.send(JSON.stringify(completedWords));
+            if (confirm("would u like to continue?"))
+                window.location.reload();
+            else
+                document.location.href = "trainings.html";
+        }
+        function onEndWords() {
+            alert("oops u leaned all words");
+            document.location.href = "trainings.html";
+        }
+
+        function resetStyle() {
+            document.getElementById("in").style = "";
+            document.getElementById("in").value = "";
+
+        }
+    </script>
+
+</head>
+<body onload="init();">
+<header>
+    <div class="dws-menu">
+        <ul class="dws-ul">
+            <li class="dws-li"><a href="home.html">Home</a></li>
+            <li class="dws-li"><a href="trainings.html">Trainings</a></li>
+            <li class="dws-li"><a href="dictionary.html">Dictionary</a></li>
+            <li class="dws-li"><a href="signIn.html">Exit</a></li>
+        </ul>
+    </div>
+</header>
+
+
+
+<form>
+    <strong id="word"></strong>
+    <div class="container">
+        <input id="in" placeholder="write translation" class="name" required autofocus  autocomplete="off"/>
+        <input id="enter" name="submit" class="btn" type="submit" value="enter" />
+    </div>
+</form>
+
+
+</body>
+</html>

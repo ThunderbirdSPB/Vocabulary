@@ -1,0 +1,96 @@
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="css/reset.css">
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+    <link rel="stylesheet" href="css/cards.css" type="text/css">
+    <title>trainings</title>
+
+
+    <script type="text/javascript">
+        var ws;
+        var word;
+        var words;
+        var completedWords = [];
+        function init(){
+            ws = new WebSocket("ws://localhost:8080/training");
+            completedWords.push("cards");
+
+            ws.onopen = function (event) {
+                ws.send("cards");
+                ws.send("getWords");
+            };
+
+            ws.onmessage = function (event) {
+                if (event.data === "endWords")
+                    onEndWords();
+                else{
+                    words = event.data.split("<separator>");
+                    words.pop();
+                    setEverything();
+                }
+            };
+
+            ws.onclose = function (event) {};
+            document.getElementsByClassName("btn")[0].addEventListener('click',clickEventHandler);
+            document.getElementsByClassName("btn")[1].addEventListener('click',clickEventHandler);
+        }
+
+        function setEverything() {
+            if (words.length === 0)
+                onEndTraining();
+
+            else{
+                word = words.pop().split("=")[0];
+                document.getElementById("word").textContent = word;
+            }
+        }
+
+        function clickEventHandler(event) {
+            event.preventDefault();
+            if (event.target.value === "know")
+                completedWords.push(word);
+
+            setEverything();
+        }
+
+        function onEndTraining() {
+            ws.send(JSON.stringify(completedWords));
+            if (confirm("would u like to continue?"))
+                window.location.reload();
+            else {
+                document.location.href = "trainings.html";
+            }
+        }
+        function onEndWords() {
+            alert("oops u leaned all words");
+            document.location.href = "trainings.html";
+        }
+
+    </script>
+
+</head>
+<body onload="init();">
+<header>
+    <div class="dws-menu">
+        <ul class="dws-ul">
+            <li class="dws-li"><a href="home.html">Home</a></li>
+            <li class="dws-li"><a href="trainings.html">Trainings</a></li>
+            <li class="dws-li"><a href="dictionary.html">Dictionary</a></li>
+            <li class="dws-li"><a href="signIn.html">Exit</a></li>
+        </ul>
+    </div>
+</header>
+
+
+
+<form>
+    <strong id="word"></strong>
+    <div class="container">
+        <input class="btn" type="submit" value="don't know"/>
+        <input class="btn" type="submit" value="know"/>
+    </div>
+</form>
+
+</body>
+</html>
